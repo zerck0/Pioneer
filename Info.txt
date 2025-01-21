@@ -1,0 +1,30 @@
+TatooineSurvival/
+│
+├── src/
+│   ├── main.c                # Point d'entrée principal
+│   ├── graphics.c            # Gestion graphique SDL
+│   ├── events.c              # Gestion des événements de jeu
+│   ├── game.c                # Logique du jeu
+│   ├── input.c               # Gestion des interactions utilisateur
+│   └── data_loader.c         # Chargement des données (races, événements)
+│
+├── include/
+│   ├── graphics.h
+│   ├── events.h
+│   ├── game.h
+│   ├── input.h
+│   └── data_loader.h
+│
+├── assets/
+│   ├── images/               # Images (fond, effets, sprites)
+│   ├── sounds/               # Sons et musiques
+│   └── fonts/                # Polices pour les textes
+│
+├── saves/
+│   └── [Fichiers de sauvegarde]
+│
+├── tests/
+│   └── [Tests unitaires]
+│
+├── Makefile                  # Script pour compiler
+└── README.md                 # Documentation principale

@@ -1,8 +1,11 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../include/groupe.h"  // Inclure le fichier d'en-tête
+#include "../include/groupe.h" 
+#include "../include/renderer.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -11,7 +14,6 @@
 #define CLEAR "clear"
 #endif
 
-// Initialisation du groupe
 void initialiserGroupe(Groupe *groupe) {
     groupe->colons = 10;
     groupe->sante = 100;
@@ -265,13 +267,41 @@ void seReposer(Groupe *groupe) {
     printf("\nLe groupe se repose et réduit sa fatigue.\n");
 }
 
-int main() {
+/*int main() {
     srand(time(NULL));
     Groupe groupe;
 
     while (!menuPrincipal(&groupe)) {}
 
     jouer(&groupe);
+
+    return 0;
+}*/
+
+int main(int argc, char *argv[]) {
+    // Initialisation du jeu et de l'affichage
+    if (init_renderer() != 0) {
+        return 1;
+    }
+
+    int running = 1;
+    SDL_Event event;
+
+    while (running) {
+        // Gestion des événements
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = 0;
+            }
+            handle_events(&event, &running);
+        }
+
+        // Mise à jour de l'affichage
+        render();
+    }
+
+    // Nettoyage et libération des ressources
+    cleanup_renderer();
 
     return 0;
 }

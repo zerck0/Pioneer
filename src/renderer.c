@@ -2,26 +2,24 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include "../include/ui.h"
+#include "../include/game.h"
 
 // Dimensions de la fenêtre
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-// Variables SDL globales
+// Variables SDL
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
-TTF_Font *font = NULL;
-
-// Textures globales
 SDL_Texture *background_texture = NULL;
 SDL_Texture *btn_new_game_texture = NULL;
 SDL_Texture *btn_options_texture = NULL;
 SDL_Texture *btn_quit_texture = NULL;
 
-// Rectangles pour les boutons
+// Rectangles des boutons
 SDL_Rect btn_new_game, btn_options, btn_quit;
 
-// Fonction pour charger une texture depuis un fichier
+// Fonction pour charger une texture
 SDL_Texture* load_texture(const char *file_path) {
     SDL_Texture *texture = IMG_LoadTexture(renderer, file_path);
     if (!texture) {
@@ -30,8 +28,8 @@ SDL_Texture* load_texture(const char *file_path) {
     return texture;
 }
 
+// Initialisation SDL
 int init_renderer() {
-    // Initialisation de SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("Erreur SDL_Init : %s\n", SDL_GetError());
         return 1;
@@ -59,22 +57,17 @@ int init_renderer() {
         return 1;
     }
 
-    // Chargement de l'image de fond
+    // Chargement des textures
     background_texture = load_texture("assets/images/menu.jpg");
-    if (!background_texture) {
-        return 1;
-    }
-
-    // Chargement des images des boutons
     btn_new_game_texture = load_texture("assets/images/new.png");
     btn_options_texture = load_texture("assets/images/option.png");
     btn_quit_texture = load_texture("assets/images/quit.png");
 
-    if (!btn_new_game_texture || !btn_options_texture || !btn_quit_texture) {
+    if (!background_texture || !btn_new_game_texture || !btn_options_texture || !btn_quit_texture) {
         return 1;
     }
 
-    // Initialisation des rectangles des boutons (alignés horizontalement)
+    // Alignement horizontal des boutons
     int button_width = 200;
     int button_height = 400;
     int spacing = 50;
@@ -97,55 +90,122 @@ int init_renderer() {
     return 0;
 }
 
+// Affichage du menu
+void afficher_menu(int *running, int *start_game) {
+    SDL_Event event;
+    int in_menu = 1;
 
+    while (in_menu) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                *running = 0;
+                in_menu = 0;
+            }
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                int x = event.button.x;
+                int y = event.button.y;
 
-void render() {
-    // Efface l'écran
-    SDL_RenderClear(renderer);
+                if (x >= btn_new_game.x && x <= btn_new_game.x + btn_new_game.w &&
+                    y >= btn_new_game.y && y <= btn_new_game.y + btn_new_game.h) {
+                    printf("Nouvelle Partie sélectionnée !\n");
+                    *start_game = 1;
+                    in_menu = 0;
+                } else if (x >= btn_options.x && x <= btn_options.x + btn_options.w &&
+                           y >= btn_options.y && y <= btn_options.y + btn_options.h) {
+                    printf("Options sélectionnées !\n");
+                } else if (x >= btn_quit.x && x <= btn_quit.x + btn_quit.w &&
+                           y >= btn_quit.y && y <= btn_quit.y + btn_quit.h) {
+                    printf("Quitter sélectionné !\n");
+                    *running = 0;
+                    in_menu = 0;
+                }
+            }
+        }
 
-    // Affiche l'image de fond
-    SDL_RenderCopy(renderer, background_texture, NULL, NULL);
-
-    // Affiche les boutons
-    SDL_RenderCopy(renderer, btn_new_game_texture, NULL, &btn_new_game);
-    SDL_RenderCopy(renderer, btn_options_texture, NULL, &btn_options);
-    SDL_RenderCopy(renderer, btn_quit_texture, NULL, &btn_quit);
-
-    // Présente le rendu
-    SDL_RenderPresent(renderer);
+        // Rendu du menu
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, background_texture, NULL, NULL);
+        SDL_RenderCopy(renderer, btn_new_game_texture, NULL, &btn_new_game);
+        SDL_RenderCopy(renderer, btn_options_texture, NULL, &btn_options);
+        SDL_RenderCopy(renderer, btn_quit_texture, NULL, &btn_quit);
+        SDL_RenderPresent(renderer);
+    }
 }
 
-
-void handle_events(SDL_Event *event, int *running) {
-    if (event->type == SDL_MOUSEBUTTONDOWN) {
-        int x = event->button.x;
-        int y = event->button.y;
-
-        // Vérification des clics sur les boutons
-        if (x >= btn_new_game.x && x <= btn_new_game.x + btn_new_game.w &&
-            y >= btn_new_game.y && y <= btn_new_game.y + btn_new_game.h) {
-            printf("Nouvelle Partie sélectionnée !\n");
-        } else if (x >= btn_options.x && x <= btn_options.x + btn_options.w &&
-                   y >= btn_options.y && y <= btn_options.y + btn_options.h) {
-            printf("Options sélectionnées !\n");
-        } else if (x >= btn_quit.x && x <= btn_quit.x + btn_quit.w &&
-                   y >= btn_quit.y && y <= btn_quit.y + btn_quit.h) {
-            printf("Quitter sélectionné !\n");
-            *running = 0;
-        }
+void afficher_jeu(int *running, Groupe *groupe) {
+    SDL_Event event;
+    int in_game = 1;
+    
+    // Charger la police
+    TTF_Font *font = TTF_OpenFont("assets/fonts/Opensans.ttf", 24);
+    if (!font) {
+        printf("Erreur TTF_OpenFont : %s\n", TTF_GetError());
+        return;
     }
+
+    SDL_Color blanc = {255, 255, 255}; // Couleur blanche
+
+    while (in_game) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                *running = 0;
+                in_game = 0;
+            }
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    printf("Retour au menu\n");
+                    in_game = 0;
+                }
+                if (event.key.keysym.sym == SDLK_RETURN) {
+                    printf("Passage au jour suivant...\n");
+                    mise_a_jour_groupe(groupe);
+                }
+            }
+        }
+
+        // Effacer l’écran et mettre un fond noir
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        // Affichage des infos du groupe
+        char buffer[256];
+
+        sprintf(buffer, "Jour: %d", groupe->joursPasses);
+        afficher_texte(renderer, font, buffer, 20, 20, blanc);
+
+        sprintf(buffer, "Colons: %d", groupe->colons);
+        afficher_texte(renderer, font, buffer, 20, 50, blanc);
+
+        sprintf(buffer, "Sante: %d", groupe->sante);
+        afficher_texte(renderer, font, buffer, 20, 80, blanc);
+
+        sprintf(buffer, "Nourriture: %d", groupe->nourriture);
+        afficher_texte(renderer, font, buffer, 20, 110, blanc);
+
+        sprintf(buffer, "Eau: %d", groupe->eau);
+        afficher_texte(renderer, font, buffer, 20, 140, blanc);
+
+        sprintf(buffer, "Fatigue: %d", groupe->fatigue);
+        afficher_texte(renderer, font, buffer, 20, 170, blanc);
+
+        sprintf(buffer, "Distance restante: %d km", groupe->distanceRestante);
+        afficher_texte(renderer, font, buffer, 20, 200, blanc);
+
+        SDL_RenderPresent(renderer);
+
+        SDL_Delay(16);
+    }
+
+    TTF_CloseFont(font);
 }
 
 
 void cleanup_renderer() {
-    // Libération des textures
     SDL_DestroyTexture(background_texture);
     SDL_DestroyTexture(btn_new_game_texture);
     SDL_DestroyTexture(btn_options_texture);
     SDL_DestroyTexture(btn_quit_texture);
 
-    // Libération des ressources SDL
-    TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();

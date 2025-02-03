@@ -132,10 +132,16 @@ void afficher_menu(int *running, int *start_game) {
     }
 }
 
+// Déclarations des textures des actions
+SDL_Texture *icon_walk = NULL;
+SDL_Texture *icon_water = NULL;
+SDL_Texture *icon_food = NULL;
+SDL_Texture *icon_rest = NULL;
+
 void afficher_jeu(int *running, Groupe *groupe) {
     SDL_Event event;
     int in_game = 1;
-    
+
     // Charger la police
     TTF_Font *font = TTF_OpenFont("assets/fonts/Opensans.ttf", 24);
     if (!font) {
@@ -143,7 +149,27 @@ void afficher_jeu(int *running, Groupe *groupe) {
         return;
     }
 
-    SDL_Color blanc = {255, 255, 255}; // Couleur blanche
+    SDL_Color blanc = {255, 255, 255};
+
+    // Charger le fond du jeu
+    SDL_Texture *background_texture = load_texture("assets/images/game_background.jpg");
+
+    // Charger les icônes des actions
+    SDL_Texture *icon_walk = load_texture("assets/icons/walk.png");
+    SDL_Texture *icon_water = load_texture("assets/icons/drink.png");
+    SDL_Texture *icon_food = load_texture("assets/icons/eat.png");
+    SDL_Texture *icon_rest = load_texture("assets/icons/rest.png");
+
+    // Zones de positionnement
+    SDL_Rect rect_infos = {0, 0, 800, 100};    // Barre supérieure
+    SDL_Rect rect_actions = {0, 500, 800, 100}; // Barre inférieure
+    SDL_Rect rect_background = {0, 100, 800, 400}; // Fond de jeu
+
+    // Positions des icônes
+    SDL_Rect rect_walk = {100, 520, 50, 50};
+    SDL_Rect rect_water = {200, 520, 50, 50};
+    SDL_Rect rect_food = {300, 520, 50, 50};
+    SDL_Rect rect_rest = {400, 520, 50, 50};
 
     while (in_game) {
         while (SDL_PollEvent(&event)) {
@@ -151,51 +177,66 @@ void afficher_jeu(int *running, Groupe *groupe) {
                 *running = 0;
                 in_game = 0;
             }
-            if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    printf("Retour au menu\n");
-                    in_game = 0;
-                }
-                if (event.key.keysym.sym == SDLK_RETURN) {
-                    printf("Passage au jour suivant...\n");
-                    mise_a_jour_groupe(groupe);
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                int x = event.button.x;
+                int y = event.button.y;
+
+                if (x >= rect_walk.x && x <= rect_walk.x + rect_walk.w && y >= rect_walk.y && y <= rect_walk.y + rect_walk.h) {
+                    choix_joueur(groupe, 1);
+                } else if (x >= rect_water.x && x <= rect_water.x + rect_water.w && y >= rect_water.y && y <= rect_water.y + rect_water.h) {
+                    choix_joueur(groupe, 2);
+                } else if (x >= rect_food.x && x <= rect_food.x + rect_food.w && y >= rect_food.y && y <= rect_food.y + rect_food.h) {
+                    choix_joueur(groupe, 3);
+                } else if (x >= rect_rest.x && x <= rect_rest.x + rect_rest.w && y >= rect_rest.y && y <= rect_rest.y + rect_rest.h) {
+                    choix_joueur(groupe, 4);
                 }
             }
         }
 
-        // Effacer l’écran et mettre un fond noir
+        // Effacer l’écran et dessiner le fond
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, background_texture, NULL, &rect_background);
 
-        // Affichage des infos du groupe
+        // Dessiner la barre d'infos
+        SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+        SDL_RenderFillRect(renderer, &rect_infos);
+
+        // Afficher les infos du groupe
         char buffer[256];
 
-        sprintf(buffer, "Jour: %d", groupe->joursPasses);
+        sprintf(buffer, "Jour: %d | Distance: %d km", groupe->joursPasses, groupe->distanceRestante);
         afficher_texte(renderer, font, buffer, 20, 20, blanc);
 
-        sprintf(buffer, "Colons: %d", groupe->colons);
+        sprintf(buffer, "Colons: %d | Santé: %d", groupe->colons, groupe->sante);
         afficher_texte(renderer, font, buffer, 20, 50, blanc);
 
-        sprintf(buffer, "Sante: %d", groupe->sante);
-        afficher_texte(renderer, font, buffer, 20, 80, blanc);
+        sprintf(buffer, "Nourriture: %d | Eau: %d", groupe->nourriture, groupe->eau);
+        afficher_texte(renderer, font, buffer, 400, 20, blanc);
 
-        sprintf(buffer, "Nourriture: %d", groupe->nourriture);
-        afficher_texte(renderer, font, buffer, 20, 110, blanc);
+        sprintf(buffer, "Fatigue: %d | Température: %d°C", groupe->fatigue, groupe->temperature);
+        afficher_texte(renderer, font, buffer, 400, 50, blanc);
 
-        sprintf(buffer, "Eau: %d", groupe->eau);
-        afficher_texte(renderer, font, buffer, 20, 140, blanc);
+        // Dessiner la barre d'actions
+        SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+        SDL_RenderFillRect(renderer, &rect_actions);
 
-        sprintf(buffer, "Fatigue: %d", groupe->fatigue);
-        afficher_texte(renderer, font, buffer, 20, 170, blanc);
-
-        sprintf(buffer, "Distance restante: %d km", groupe->distanceRestante);
-        afficher_texte(renderer, font, buffer, 20, 200, blanc);
+        // Afficher les icônes des actions
+        SDL_RenderCopy(renderer, icon_walk, NULL, &rect_walk);
+        SDL_RenderCopy(renderer, icon_water, NULL, &rect_water);
+        SDL_RenderCopy(renderer, icon_food, NULL, &rect_food);
+        SDL_RenderCopy(renderer, icon_rest, NULL, &rect_rest);
 
         SDL_RenderPresent(renderer);
-
         SDL_Delay(16);
     }
 
+    // Nettoyage des textures
+    SDL_DestroyTexture(background_texture);
+    SDL_DestroyTexture(icon_walk);
+    SDL_DestroyTexture(icon_water);
+    SDL_DestroyTexture(icon_food);
+    SDL_DestroyTexture(icon_rest);
     TTF_CloseFont(font);
 }
 

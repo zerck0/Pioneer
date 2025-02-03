@@ -1,6 +1,7 @@
 #include "../include/game.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 // Initialisation du groupe de colons
 void init_groupe(Groupe *groupe) {
@@ -14,9 +15,9 @@ void init_groupe(Groupe *groupe) {
     groupe->joursSansEau = 0;
     groupe->joursSansNourriture = 0;
     groupe->joursPasses = 0;
-    groupe->distanceRestante = 500; // Par exemple, 500 km avant l'objectif
-    groupe->vitesse = 10; // Km/jour
-    groupe->temperature = 35; // Exemple de température désertique
+    groupe->distanceRestante = 500;
+    groupe->vitesse = 10;
+    groupe->temperature = 35;
 }
 
 // Mise à jour quotidienne du groupe
@@ -48,7 +49,7 @@ void mise_a_jour_groupe(Groupe *groupe) {
     }
     if (groupe->fatigue >= 100) {
         groupe->sante -= 5;
-        groupe->fatigue = 100; // Fatigue ne dépasse pas 100
+        groupe->fatigue = 100;
     }
 
     // Vérification de la survie
@@ -58,13 +59,39 @@ void mise_a_jour_groupe(Groupe *groupe) {
     }
 }
 
-// Affichage des statistiques du groupe dans la console
-void afficher_groupe_console(Groupe *groupe) {
-    printf("Jour %d | Colons: %d | Santé: %d | Attaque: %d | Expérience: %d\n",
-           groupe->joursPasses, groupe->colons, groupe->sante, groupe->puissanceAttaque, groupe->experience);
-    printf("Nourriture: %d | Eau: %d | Fatigue: %d | Température: %d°C\n",
-           groupe->nourriture, groupe->eau, groupe->fatigue, groupe->temperature);
-    printf("Jours sans eau: %d | Jours sans nourriture: %d\n",
-           groupe->joursSansEau, groupe->joursSansNourriture);
-    printf("Distance restante: %d km\n\n", groupe->distanceRestante);
+void choix_joueur(Groupe *groupe, int choix) {
+    srand(time(NULL));
+    switch (choix) {
+        case 1: // Avancer
+            groupe->distanceRestante -= groupe->vitesse;
+            groupe->nourriture -= 5;
+            groupe->eau -= 5;
+            groupe->fatigue += 5;
+            break;
+        
+        case 2: // Chercher de l'eau
+            if (rand() % 2 == 0) {
+                groupe->eau += 20;
+            }
+            break;
+
+        case 3: // Chercher de la nourriture
+            if (rand() % 2 == 0) {
+                groupe->nourriture += 15;
+            } else {
+                groupe->sante -= 5;
+            }
+            break;
+
+        case 4: // Se reposer
+            groupe->fatigue -= 10;
+            if (groupe->fatigue < 0) groupe->fatigue = 0;
+            break;
+
+        case 5: // Passer un jour sans action
+            break;
+
+        default:
+            break;
+    }
 }

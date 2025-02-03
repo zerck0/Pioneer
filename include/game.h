@@ -29,4 +29,10 @@ void mise_a_jour_groupe(Groupe *groupe);
 // Affichage des stats du groupe dans la console
 void afficher_groupe_console(Groupe *groupe);
 
+// Gestion des choix du joueur
+void choix_joueur(Groupe *groupe, int choix);
+
+void afficher_groupe_console(Groupe *groupe); 
+
+
 #endif

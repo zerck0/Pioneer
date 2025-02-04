@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL.h>
 
-// Structure représentant un groupe de colons en survie
+// Structure représentant un groupe de colons
 typedef struct {
     int colons;
     int sante;
@@ -20,19 +20,23 @@ typedef struct {
     int temperature;
 } Groupe;
 
-// Initialisation du groupe de colons
+// Structure représentant les actions choisies pour la journée
+typedef struct {
+    int boire;
+    int manger;
+    int avancer;
+    int se_reposer;
+    int chercher_eau;
+    int chercher_nourriture;
+} ActionsJour;
+
+// Initialisation du groupe
 void init_groupe(Groupe *groupe);
 
-// Mise à jour des stats du groupe (chaque jour qui passe)
-void mise_a_jour_groupe(Groupe *groupe);
+// Initialisation des actions du jour
+void init_actions_jour(ActionsJour *actions);
 
-// Affichage des stats du groupe dans la console
-void afficher_groupe_console(Groupe *groupe);
-
-// Gestion des choix du joueur
-void choix_joueur(Groupe *groupe, int choix);
-
-void afficher_groupe_console(Groupe *groupe); 
-
+// Vérifier et appliquer les actions du joueur
+void appliquer_actions(Groupe *groupe, ActionsJour *actions);
 
 #endif

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Initialisation du groupe de colons
+// Initialisation du groupe
 void init_groupe(Groupe *groupe) {
     groupe->colons = 10;
     groupe->sante = 100;
@@ -20,27 +20,56 @@ void init_groupe(Groupe *groupe) {
     groupe->temperature = 35;
 }
 
-// Mise à jour quotidienne du groupe
-void mise_a_jour_groupe(Groupe *groupe) {
-    groupe->joursPasses++;
-    groupe->nourriture -= 5;
-    groupe->eau -= 3;
-    groupe->fatigue += 2;
-    groupe->distanceRestante -= groupe->vitesse;
+// Initialisation des actions du jour
+void init_actions_jour(ActionsJour *actions) {
+    actions->boire = 0;
+    actions->manger = 0;
+    actions->avancer = 0;
+    actions->se_reposer = 0;
+    actions->chercher_eau = 0;
+    actions->chercher_nourriture = 0;
+}
 
-    if (groupe->eau <= 0) {
+// Appliquer les actions du joueur
+void appliquer_actions(Groupe *groupe, ActionsJour *actions) {
+    // Gestion de l'eau et de la nourriture
+    if (actions->boire && groupe->eau > 0) {
+        groupe->eau -= 5;
+        groupe->sante += 5;
+    } else {
         groupe->joursSansEau++;
-    } else {
-        groupe->joursSansEau = 0;
     }
 
-    if (groupe->nourriture <= 0) {
+    if (actions->manger && groupe->nourriture > 0) {
+        groupe->nourriture -= 5;
+        groupe->sante += 5;
+    } else {
         groupe->joursSansNourriture++;
-    } else {
-        groupe->joursSansNourriture = 0;
     }
 
-    // Conditions de survie
+    // Avancer
+    if (actions->avancer) {
+        groupe->distanceRestante -= groupe->vitesse;
+        groupe->fatigue += 10;
+    }
+
+    // Se reposer
+    if (actions->se_reposer) {
+        groupe->fatigue -= 10;
+        if (groupe->fatigue < 0) groupe->fatigue = 0;
+    }
+
+    // Chercher de l'eau
+    if (actions->chercher_eau && rand() % 2 == 0) {
+        groupe->eau += 10;
+    }
+
+    // Chercher de la nourriture
+    if (actions->chercher_nourriture && rand() % 2 == 0) {
+        groupe->nourriture += 10;
+    }
+
+    // Vérification de la survie
     if (groupe->joursSansEau > 3) {
         groupe->sante -= 20;
     }
@@ -49,49 +78,11 @@ void mise_a_jour_groupe(Groupe *groupe) {
     }
     if (groupe->fatigue >= 100) {
         groupe->sante -= 5;
-        groupe->fatigue = 100;
     }
 
-    // Vérification de la survie
-    if (groupe->sante <= 0 || groupe->colons <= 0) {
-        printf("Game Over ! Votre groupe n’a pas survécu...\n");
-        exit(0);
-    }
-}
+    // Passage au jour suivant
+    groupe->joursPasses++;
 
-void choix_joueur(Groupe *groupe, int choix) {
-    srand(time(NULL));
-    switch (choix) {
-        case 1: // Avancer
-            groupe->distanceRestante -= groupe->vitesse;
-            groupe->nourriture -= 5;
-            groupe->eau -= 5;
-            groupe->fatigue += 5;
-            break;
-        
-        case 2: // Chercher de l'eau
-            if (rand() % 2 == 0) {
-                groupe->eau += 20;
-            }
-            break;
-
-        case 3: // Chercher de la nourriture
-            if (rand() % 2 == 0) {
-                groupe->nourriture += 15;
-            } else {
-                groupe->sante -= 5;
-            }
-            break;
-
-        case 4: // Se reposer
-            groupe->fatigue -= 10;
-            if (groupe->fatigue < 0) groupe->fatigue = 0;
-            break;
-
-        case 5: // Passer un jour sans action
-            break;
-
-        default:
-            break;
-    }
+    // Réinitialisation des actions du jour
+    init_actions_jour(actions);
 }

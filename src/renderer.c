@@ -148,6 +148,9 @@ SDL_Texture *icon_walk = NULL;
 SDL_Texture *icon_water = NULL;
 SDL_Texture *icon_food = NULL;
 SDL_Texture *icon_rest = NULL;
+SDL_Texture *icon_hunt = NULL; // Icône pour Chasser
+SDL_Texture *icon_fetch_water = NULL; // Icône pour Chercher de l'eau
+
 SDL_Color vert = {0, 255, 0};
 SDL_Color rouge = {255, 0, 0};
 SDL_Color bleu = {0, 0, 255};
@@ -209,22 +212,29 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
     icon_water = load_texture("assets/icons/drink.png");
     icon_food = load_texture("assets/icons/eat.png");
     icon_rest = load_texture("assets/icons/rest.png");
+    icon_hunt = load_texture("assets/icons/hunt.png");
+    icon_fetch_water = load_texture("assets/icons/fetch_water.png");
+
 
     // Définition des zones d'affichage
     SDL_Rect rect_background = {0, 100, 800, 400}; // Fond du jeu
     SDL_Rect rect_infos = {0, 0, 800, 120}; // Zone d'infos (augmentée)
     SDL_Rect rect_actions = {0, 500, 800, 100}; // Barre d'actions
     SDL_Rect rect_fin_jour = {600, 520, 150, 50}; // Bouton "Fin du jour"
+    
+
 
     // Taille des icônes et encadré noir
     int icon_size = 50;  
     int icon_border = 4;  
 
     // Positions des icônes d'action
-    SDL_Rect rect_walk = {100, 520, icon_size, icon_size};
-    SDL_Rect rect_water = {200, 520, icon_size, icon_size};
-    SDL_Rect rect_food = {300, 520, icon_size, icon_size};
-    SDL_Rect rect_rest = {400, 520, icon_size, icon_size};
+    SDL_Rect rect_walk = {30, 520, icon_size, icon_size};
+    SDL_Rect rect_water = {130, 520, icon_size, icon_size};
+    SDL_Rect rect_food = {230, 520, icon_size, icon_size};
+    SDL_Rect rect_rest = {330, 520, icon_size, icon_size};
+    SDL_Rect rect_hunt = {430, 520, icon_size, icon_size}; // Position de l'icône "Chasser"
+    SDL_Rect rect_fetch_water = {530, 520, icon_size, icon_size}; // Position de l'icône "Chercher de l'eau"
 
     int selected_actions = 0;
 
@@ -243,7 +253,7 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
                     if (actions.avancer) {
                         actions.avancer = 0;
                         selected_actions--;
-                    } else if (selected_actions < 2) {
+                    } else if (selected_actions < 3) {
                         actions.avancer = 1;
                         selected_actions++;
                     }
@@ -251,7 +261,7 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
                     if (actions.boire) {
                         actions.boire = 0;
                         selected_actions--;
-                    } else if (selected_actions < 2) {
+                    } else if (selected_actions < 3) {
                         actions.boire = 1;
                         selected_actions++;
                     }
@@ -259,7 +269,7 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
                     if (actions.manger) {
                         actions.manger = 0;
                         selected_actions--;
-                    } else if (selected_actions < 2) {
+                    } else if (selected_actions < 3) {
                         actions.manger = 1;
                         selected_actions++;
                     }
@@ -267,11 +277,28 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
                     if (actions.se_reposer) {
                         actions.se_reposer = 0;
                         selected_actions--;
-                    } else if (selected_actions < 2) {
+                    } else if (selected_actions < 3) {
                         actions.se_reposer = 1;
                         selected_actions++;
                     }
+                } else if (x >= rect_hunt.x && x <= rect_hunt.x + rect_hunt.w && y >= rect_hunt.y && y <= rect_hunt.y + rect_hunt.h) {  
+                    if (actions.chasser) {  
+                        actions.chasser = 0;  
+                        selected_actions--;  
+                    } else if (selected_actions < 3) {  
+                        actions.chasser = 1;  
+                        selected_actions++;  
+                    }  
+                } else if (x >= rect_fetch_water.x && x <= rect_fetch_water.x + rect_fetch_water.w && y >= rect_fetch_water.y && y <= rect_fetch_water.y + rect_fetch_water.h) {  
+                    if (actions.chercher_eau) {  
+                        actions.chercher_eau = 0;  
+                        selected_actions--;  
+                    } else if (selected_actions < 3) {  
+                        actions.chercher_eau = 1;  
+                        selected_actions++;  
+                    }  
                 }
+   
 
                 // Bouton "Fin du jour"
                 if (x >= rect_fin_jour.x && x <= rect_fin_jour.x + rect_fin_jour.w &&
@@ -342,12 +369,17 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
         if (actions.boire) SDL_RenderFillRect(renderer, &(SDL_Rect){rect_water.x - icon_border, rect_water.y - icon_border, icon_size + (icon_border * 2), icon_size + (icon_border * 2)});
         if (actions.manger) SDL_RenderFillRect(renderer, &(SDL_Rect){rect_food.x - icon_border, rect_food.y - icon_border, icon_size + (icon_border * 2), icon_size + (icon_border * 2)});
         if (actions.se_reposer) SDL_RenderFillRect(renderer, &(SDL_Rect){rect_rest.x - icon_border, rect_rest.y - icon_border, icon_size + (icon_border * 2), icon_size + (icon_border * 2)});
+        if (actions.chasser) SDL_RenderFillRect(renderer, &(SDL_Rect){rect_hunt.x - icon_border, rect_hunt.y - icon_border, icon_size + (icon_border * 2), icon_size + (icon_border * 2)});
+        if (actions.chercher_eau) SDL_RenderFillRect(renderer, &(SDL_Rect){rect_fetch_water.x - icon_border, rect_fetch_water.y - icon_border, icon_size + (icon_border * 2), icon_size + (icon_border * 2)});
 
         // Afficher les icônes des actions
         SDL_RenderCopy(renderer, icon_walk, NULL, &rect_walk);
         SDL_RenderCopy(renderer, icon_water, NULL, &rect_water);
         SDL_RenderCopy(renderer, icon_food, NULL, &rect_food);
         SDL_RenderCopy(renderer, icon_rest, NULL, &rect_rest);
+        SDL_RenderCopy(renderer, icon_hunt, NULL, &rect_hunt);
+        SDL_RenderCopy(renderer, icon_fetch_water, NULL, &rect_fetch_water);
+
 
         // Afficher le bouton "Fin du jour"
         SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
@@ -364,6 +396,8 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
     SDL_DestroyTexture(icon_water);
     SDL_DestroyTexture(icon_food);
     SDL_DestroyTexture(icon_rest);
+    SDL_DestroyTexture(icon_hunt);
+    SDL_DestroyTexture(icon_fetch_water);
     TTF_CloseFont(font);
 }
 
@@ -441,7 +475,7 @@ void afficher_ecran_titre(int *running) {
     }
 
     // Charger la police
-    TTF_Font *font = TTF_OpenFont("assets/fonts/Opensans.ttf", 48);
+    TTF_Font *font = TTF_OpenFont("assets/fonts/eurostile.ttf", 48);
     if (!font) {
         printf("Erreur TTF_OpenFont : %s\n", TTF_GetError());
         *running = 0;
@@ -472,4 +506,109 @@ void afficher_ecran_titre(int *running) {
 
     SDL_DestroyTexture(title_texture);
     TTF_CloseFont(font);
+}
+
+void afficher_evenement_sdl(Groupe *groupe, const char *image_path, const char *texte, 
+                            int effet_choix1_nourriture, int effet_choix1_eau, 
+                            int effet_choix2_nourriture, int effet_choix2_eau) {
+    SDL_Event event;
+    int in_event = 1;
+    int afficher_resultat = 0; // Indique si on affiche le résultat du choix
+    char message_resultat[50] = ""; 
+
+    // Charger l'image de l'événement
+    SDL_Texture *event_background = load_texture(image_path);
+    if (!event_background) {
+        printf("Erreur de chargement de l'image d'événement\n");
+        return;
+    }
+
+    // Charger les boutons
+    SDL_Texture *btn_choix1_texture = load_texture("assets/images/Accept.png");
+    SDL_Texture *btn_choix2_texture = load_texture("assets/images/Refuser.png");
+
+    if (!btn_choix1_texture || !btn_choix2_texture) {
+        printf("Erreur de chargement des boutons d'événement\n");
+        return;
+    }
+
+    // Charger les polices
+    TTF_Font *font_texte = TTF_OpenFont("assets/fonts/eurostile.ttf", 16); // Texte plus petit
+    TTF_Font *font_resultat = TTF_OpenFont("assets/fonts/eurostile.ttf", 32); // Résultat plus gros
+
+    if (!font_texte || !font_resultat) {
+        printf("Erreur de chargement des polices\n");
+        return;
+    }
+
+    SDL_Color blanc = {255, 255, 255};
+
+    // Définition des zones
+    SDL_Rect rect_zone_texte = {0, 450, 800, 150}; // Zone noire pour le texte
+    SDL_Rect rect_btn_choix1 = {150, 520, 200, 50}; // Bouton "Accepter"
+    SDL_Rect rect_btn_choix2 = {450, 520, 200, 50}; // Bouton "Refuser"
+
+    while (in_event) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                in_event = 0;
+            }
+            if (event.type == SDL_MOUSEBUTTONDOWN && !afficher_resultat) {
+                int x = event.button.x;
+                int y = event.button.y;
+
+                // Si le joueur clique sur le bouton "Accepter"
+                if (x >= rect_btn_choix1.x && x <= rect_btn_choix1.x + rect_btn_choix1.w &&
+                    y >= rect_btn_choix1.y && y <= rect_btn_choix1.y + rect_btn_choix1.h) {
+                    groupe->nourriture += effet_choix1_nourriture;
+                    groupe->eau += effet_choix1_eau;
+                    snprintf(message_resultat, sizeof(message_resultat), 
+                             "+%d Nourriture, +%d Eau", effet_choix1_nourriture, effet_choix1_eau);
+                    afficher_resultat = 1;
+                }
+
+                // Si le joueur clique sur le bouton "Refuser"
+                if (x >= rect_btn_choix2.x && x <= rect_btn_choix2.x + rect_btn_choix2.w &&
+                    y >= rect_btn_choix2.y && y <= rect_btn_choix2.y + rect_btn_choix2.h) {
+                    groupe->nourriture += effet_choix2_nourriture;
+                    groupe->eau += effet_choix2_eau;
+                    snprintf(message_resultat, sizeof(message_resultat), 
+                             "+%d Nourriture, +%d Eau", effet_choix2_nourriture, effet_choix2_eau);
+                    afficher_resultat = 1;
+                }
+            }
+        }
+
+        // Affichage
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, event_background, NULL, NULL);
+
+        // Zone noire pour le texte
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180);
+        SDL_RenderFillRect(renderer, &rect_zone_texte);
+
+        // Affichage de l'énoncé
+        afficher_texte(renderer, font_texte, texte, 20, 470, blanc);
+
+        if (!afficher_resultat) {
+            // Afficher les boutons si le choix n'est pas encore fait
+            SDL_RenderCopy(renderer, btn_choix1_texture, NULL, &rect_btn_choix1);
+            SDL_RenderCopy(renderer, btn_choix2_texture, NULL, &rect_btn_choix2);
+        } else {
+            // Afficher le résultat en grand si un choix a été fait
+            afficher_texte(renderer, font_resultat, message_resultat, 300, 550, blanc);
+            SDL_RenderPresent(renderer);
+            SDL_Delay(2000); // Pause d'1 seconde pour afficher le résultat
+            in_event = 0; // Fermer l'événement après affichage du résultat
+        }
+
+        SDL_RenderPresent(renderer);
+    }
+
+    // Nettoyage des textures
+    SDL_DestroyTexture(event_background);
+    SDL_DestroyTexture(btn_choix1_texture);
+    SDL_DestroyTexture(btn_choix2_texture);
+    TTF_CloseFont(font_texte);
+    TTF_CloseFont(font_resultat);
 }

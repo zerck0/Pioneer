@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../include/groupe.h" 
 #include "../include/game.h" 
 #include "../include/renderer.h"
 

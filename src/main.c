@@ -11,7 +11,6 @@
 #ifdef _WIN32
 #include <SDL2/SDL_image.h>
 #else
-#include <SDL2/SDL2_image/SDL_image.h>
 #endif
 
 int main(int argc, char *argv[]) {
@@ -24,20 +23,22 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Afficher l'écran titre
+    // Afficher l'écran titre au démarrage
+    printf("Démarrage du jeu...\n");
     afficher_ecran_titre(&running);
 
     while (running) {
-        // Afficher l'écran titre avant le menu principal si retour au menu
-        if (return_to_menu) {
+        if (return_to_menu && !start_game) {
+            printf("Retour à l'écran titre\n");
             afficher_ecran_titre(&running);
             return_to_menu = 0;
         }
 
-        // Afficher le menu principal
+        printf("Affichage du menu principal...\n");
         afficher_menu(&running, &start_game);
 
         if (start_game) {
+            printf("Lancement du jeu...\n");
             Groupe groupe;
             init_groupe(&groupe);
 
@@ -46,11 +47,14 @@ int main(int argc, char *argv[]) {
             }
 
             if (return_to_menu) {
+                printf("Retour au menu principal...\n");
                 start_game = 0;
+                return_to_menu = 0;
             }
         }
     }
 
     cleanup_renderer();
+    printf("Fermeture du jeu...\n");
     return 0;
 }

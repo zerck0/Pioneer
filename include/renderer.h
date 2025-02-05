@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include "../include/game.h" // Include game.h to define Groupe
+#include "game.h"
 
 // Déclarations des fonctions
 int init_renderer();

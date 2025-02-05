@@ -95,6 +95,13 @@ void afficher_menu(int *running, int *start_game) {
     SDL_Event event;
     int in_menu = 1;
 
+    // Recharger la texture du menu à chaque appel
+    SDL_Texture *menu_background = load_texture("assets/images/menu.jpg");
+    if (!menu_background) {
+        printf("Erreur de chargement du background du menu\n");
+        return;
+    }
+
     while (in_menu) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -124,13 +131,17 @@ void afficher_menu(int *running, int *start_game) {
 
         // Rendu du menu
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, background_texture, NULL, NULL);
+        SDL_RenderCopy(renderer, menu_background, NULL, NULL);
         SDL_RenderCopy(renderer, btn_new_game_texture, NULL, &btn_new_game);
         SDL_RenderCopy(renderer, btn_options_texture, NULL, &btn_options);
         SDL_RenderCopy(renderer, btn_quit_texture, NULL, &btn_quit);
         SDL_RenderPresent(renderer);
     }
+
+    // Libération de la texture du menu après son utilisation
+    SDL_DestroyTexture(menu_background);
 }
+
 
 // Déclarations des textures des actions
 SDL_Texture *icon_walk = NULL;
@@ -185,7 +196,7 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
     init_actions_jour(&actions);
 
     // Charger la police
-    TTF_Font *font = TTF_OpenFont("assets/fonts/Opensans.ttf", 24);
+    TTF_Font *font = TTF_OpenFont("assets/fonts/eurostile.ttf", 24);
     if (!font) {
         printf("Erreur TTF_OpenFont : %s\n", TTF_GetError());
         return;
@@ -271,7 +282,7 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
 
                     // Vérifier si la santé est à 0 ou en dessous
                     if (groupe->sante <= 0) {
-                        printf("Game Over! Your group has perished.\n");
+                        printf("Perdu ! Votre colonie n'a pas survécue.\n");
                         afficher_ecran_game_over(running, return_to_menu);
                         in_game = 0;
                     }
@@ -299,6 +310,10 @@ void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
         int barre_x_droite = 570;
         int barre_largeur = 200;
         int barre_hauteur = 12;
+
+        sprintf(buffer, "Colons: %d", groupe->colons);
+        afficher_texte(renderer, font, buffer, texte_x_droite, 20, blanc);
+        afficher_barre(renderer, barre_x_droite, 30, barre_largeur, barre_hauteur, groupe->colons, 100, (SDL_Color){255, 165, 0, 255});
 
         // Affichage des barres alignées avec le texte
         sprintf(buffer, "Santé: %d", groupe->sante);
@@ -366,7 +381,7 @@ void cleanup_renderer() {
 }
 
 void afficher_transition_jour(SDL_Renderer *renderer, int jour) {
-    SDL_Color noir = {0, 0, 0};
+    SDL_Color noir = {0, 0, 0, 255}; // Texte en noir
     TTF_Font *font = TTF_OpenFont("assets/fonts/Opensans.ttf", 48);
     if (!font) {
         printf("Erreur TTF_OpenFont : %s\n", TTF_GetError());
@@ -375,6 +390,10 @@ void afficher_transition_jour(SDL_Renderer *renderer, int jour) {
 
     // Charger l'image de transition
     SDL_Texture *transition_texture = load_texture("assets/images/transition.jpg");
+    if (!transition_texture) {
+        printf("Erreur : Impossible de charger l'image de transition\n");
+        return;
+    }
 
     char buffer[32];
     sprintf(buffer, "Jour %d", jour);
@@ -382,15 +401,16 @@ void afficher_transition_jour(SDL_Renderer *renderer, int jour) {
     // Afficher le background de transition
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, transition_texture, NULL, NULL);
-    afficher_texte(renderer, font, buffer, 600, 400, noir);
+    afficher_texte(renderer, font, buffer, 300, 250, noir); // Texte en noir au centre
     
     SDL_RenderPresent(renderer);
-    SDL_Delay(2000); // Pause de 2 secondes avant de continuer
+    SDL_Delay(1500); // Pause de 1,5 secondes avant de revenir au jeu
 
     // Nettoyage
     SDL_DestroyTexture(transition_texture);
     TTF_CloseFont(font);
 }
+
 
 void afficher_barre(SDL_Renderer *renderer, int x, int y, int largeur, int hauteur, int valeur, int max, SDL_Color couleur) {
     // Calcul de la largeur de la barre selon la valeur

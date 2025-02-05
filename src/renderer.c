@@ -142,8 +142,41 @@ SDL_Color rouge = {255, 0, 0};
 SDL_Color bleu = {0, 0, 255};
 SDL_Color jaune = {255, 255, 0};
 
+void afficher_ecran_game_over(int *running, int *return_to_menu) {
+    SDL_Event event;
+    int in_game_over_screen = 1;
+
+    // Charger la texture de l'écran de game over
+    SDL_Texture *game_over_texture = load_texture("assets/images/Game over.jpg");
+    if (!game_over_texture) {
+        printf("Erreur de chargement de l'image Game over.jpg\n");
+        *running = 0;
+        return;
+    }
+
+    while (in_game_over_screen) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                *running = 0;
+                in_game_over_screen = 0;
+            }
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                in_game_over_screen = 0;
+                *return_to_menu = 1;
+            }
+        }
+
+        // Rendu de l'écran de game over
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, game_over_texture, NULL, NULL);
+        SDL_RenderPresent(renderer);
+    }
+
+    SDL_DestroyTexture(game_over_texture);
+}
+
 // Fonction pour afficher le jeu avec toutes les infos et les actions
-void afficher_jeu(int *running, Groupe *groupe) {
+void afficher_jeu(int *running, Groupe *groupe, int *return_to_menu) {
     SDL_Event event;
     int in_game = 1;
 
@@ -175,13 +208,14 @@ void afficher_jeu(int *running, Groupe *groupe) {
     // Taille des icônes et encadré noir
     int icon_size = 50;  
     int icon_border = 4;  
-    SDL_Color noir = {0, 0, 0, 255};  
 
     // Positions des icônes d'action
     SDL_Rect rect_walk = {100, 520, icon_size, icon_size};
     SDL_Rect rect_water = {200, 520, icon_size, icon_size};
     SDL_Rect rect_food = {300, 520, icon_size, icon_size};
     SDL_Rect rect_rest = {400, 520, icon_size, icon_size};
+
+    int selected_actions = 0;
 
     while (in_game) {
         while (SDL_PollEvent(&event)) {
@@ -195,13 +229,37 @@ void afficher_jeu(int *running, Groupe *groupe) {
 
                 // Sélection des actions du jour
                 if (x >= rect_walk.x && x <= rect_walk.x + rect_walk.w && y >= rect_walk.y && y <= rect_walk.y + rect_walk.h) {
-                    actions.avancer = 1;
+                    if (actions.avancer) {
+                        actions.avancer = 0;
+                        selected_actions--;
+                    } else if (selected_actions < 2) {
+                        actions.avancer = 1;
+                        selected_actions++;
+                    }
                 } else if (x >= rect_water.x && x <= rect_water.x + rect_water.w && y >= rect_water.y && y <= rect_water.y + rect_water.h) {
-                    actions.boire = 1;
+                    if (actions.boire) {
+                        actions.boire = 0;
+                        selected_actions--;
+                    } else if (selected_actions < 2) {
+                        actions.boire = 1;
+                        selected_actions++;
+                    }
                 } else if (x >= rect_food.x && x <= rect_food.x + rect_food.w && y >= rect_food.y && y <= rect_food.y + rect_food.h) {
-                    actions.manger = 1;
+                    if (actions.manger) {
+                        actions.manger = 0;
+                        selected_actions--;
+                    } else if (selected_actions < 2) {
+                        actions.manger = 1;
+                        selected_actions++;
+                    }
                 } else if (x >= rect_rest.x && x <= rect_rest.x + rect_rest.w && y >= rect_rest.y && y <= rect_rest.y + rect_rest.h) {
-                    actions.se_reposer = 1;
+                    if (actions.se_reposer) {
+                        actions.se_reposer = 0;
+                        selected_actions--;
+                    } else if (selected_actions < 2) {
+                        actions.se_reposer = 1;
+                        selected_actions++;
+                    }
                 }
 
                 // Bouton "Fin du jour"
@@ -209,6 +267,14 @@ void afficher_jeu(int *running, Groupe *groupe) {
                     y >= rect_fin_jour.y && y <= rect_fin_jour.y + rect_fin_jour.h) {
                     afficher_transition_jour(renderer, groupe->joursPasses + 1);
                     appliquer_actions(groupe, &actions);
+                    selected_actions = 0;
+
+                    // Vérifier si la santé est à 0 ou en dessous
+                    if (groupe->sante <= 0) {
+                        printf("Game Over! Your group has perished.\n");
+                        afficher_ecran_game_over(running, return_to_menu);
+                        in_game = 0;
+                    }
                 }
             }
         }
@@ -286,8 +352,6 @@ void afficher_jeu(int *running, Groupe *groupe) {
     TTF_CloseFont(font);
 }
 
-
-
 void cleanup_renderer() {
     SDL_DestroyTexture(background_texture);
     SDL_DestroyTexture(btn_new_game_texture);
@@ -341,4 +405,51 @@ void afficher_barre(SDL_Renderer *renderer, int x, int y, int largeur, int haute
     SDL_SetRenderDrawColor(renderer, couleur.r, couleur.g, couleur.b, 255);
     SDL_Rect barre = {x, y, barre_largeur, hauteur};
     SDL_RenderFillRect(renderer, &barre);
+}
+
+// Nouvelle fonction pour afficher l'écran titre
+void afficher_ecran_titre(int *running) {
+    SDL_Event event;
+    int in_title_screen = 1;
+
+    // Charger la texture de l'écran titre
+    SDL_Texture *title_texture = load_texture("assets/images/title.jpg");
+    if (!title_texture) {
+        printf("Erreur de chargement de l'image title.jpg\n");
+        *running = 0;
+        return;
+    }
+
+    // Charger la police
+    TTF_Font *font = TTF_OpenFont("assets/fonts/Opensans.ttf", 48);
+    if (!font) {
+        printf("Erreur TTF_OpenFont : %s\n", TTF_GetError());
+        *running = 0;
+        return;
+    }
+    SDL_Color blanc = {255, 255, 255};
+
+    while (in_title_screen) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                *running = 0;
+                in_title_screen = 0;
+            }
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                in_title_screen = 0;
+            }
+        }
+
+        // Rendu de l'écran titre
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, title_texture, NULL, NULL);
+
+        // Afficher le texte "Cliquez pour commencer !"
+        afficher_texte(renderer, font, "Cliquez pour commencer !", 200, 500, blanc);
+
+        SDL_RenderPresent(renderer);
+    }
+
+    SDL_DestroyTexture(title_texture);
+    TTF_CloseFont(font);
 }

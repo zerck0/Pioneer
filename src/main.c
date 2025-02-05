@@ -9,29 +9,45 @@
 #include "../include/renderer.h"
 
 #ifdef _WIN32
-#include <windows.h>
-#define CLEAR "cls"
+#include <SDL2/SDL_image.h>
 #else
-#define CLEAR "clear"
+#include <SDL2/SDL2_image/SDL_image.h>
 #endif
 
 int main(int argc, char *argv[]) {
-    // Initialisation du rendu SDL
+    int running = 1;
+    int start_game = 0;
+    int return_to_menu = 0;
+
     if (init_renderer() != 0) {
+        printf("Erreur lors de l'initialisation du renderer\n");
         return 1;
     }
 
-    int running = 1;
-    int start_game = 0; // 0 = menu, 1 = jeu
-
-    Groupe groupe;
-    init_groupe(&groupe); // Initialisation du groupe de colons
+    // Afficher l'écran titre
+    afficher_ecran_titre(&running);
 
     while (running) {
-        if (!start_game) {
-            afficher_menu(&running, &start_game);
-        } else {
-            afficher_jeu(&running, &groupe);
+        // Afficher l'écran titre avant le menu principal si retour au menu
+        if (return_to_menu) {
+            afficher_ecran_titre(&running);
+            return_to_menu = 0;
+        }
+
+        // Afficher le menu principal
+        afficher_menu(&running, &start_game);
+
+        if (start_game) {
+            Groupe groupe;
+            init_groupe(&groupe);
+
+            while (running && !return_to_menu) {
+                afficher_jeu(&running, &groupe, &return_to_menu);
+            }
+
+            if (return_to_menu) {
+                start_game = 0;
+            }
         }
     }
 

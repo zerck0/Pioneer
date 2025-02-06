@@ -9,7 +9,7 @@ OBJ = $(SRC:.c=.o)
 
 # Commande pour récupérer les drapeaux SDL2 automatiquement
 CFLAGS = -Wall `sdl2-config --cflags`
-LDFLAGS = `sdl2-config --libs` -lSDL2_ttf -lSDL2_image
+LDFLAGS = `sdl2-config --libs` -lSDL2_ttf -lSDL2_image -lSDL2_mixer
 
 # Compilateur
 CC = gcc
